@@ -1,0 +1,20 @@
+Shotglass
+Screenshots, made simple.
+
+A small, native screenshot tool for your Mac. Open it, choose your capture, and get back to what you were doing.
+
+Capture a display, a window or an area. Reuse your last rectangle, drag it into place, or draw a new one. Keys 1–5 follow the icons in the toolbar. Snap on draw can capture immediately when you finish a new rectangle.
+
+Your screenshots save as PNG and copy to the clipboard by default. Choose your save folder and enable an optional quick thumbnail preview.
+
+Annotate, redact, crop and resize. Recognize text and QR codes on your Mac. Record your screen with optional audio and webcam, trim clips and export GIFs. Capture long content by scrolling manually and adding frames.
+
+Free. No account, ads or analytics. Built for Apple Silicon and macOS 26 or later, with native Liquid Glass.
+
+Published by Paraply Ventures AS.
+
+Publication notes (remove before hosting):
+Suggested URL: https://mscno.com/shotglass/ — domain choice is not yet configured.
+Add the actual Mac App Store link after the app becomes available.
+Link to the published support and privacy pages.
+Use a real app screenshot; docs/screenshot.png is suitable for the website, not the Store listing dimensions.

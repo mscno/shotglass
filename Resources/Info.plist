@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>CFBundleName</key><string>Shotglass</string>
+    <key>CFBundleDisplayName</key><string>Shotglass</string>
+    <key>CFBundleIdentifier</key><string>no.paraply.shotglass</string>
+    <key>CFBundleExecutable</key><string>Shotglass</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>1.6.2</string>
+    <key>CFBundleVersion</key><string>11</string>
+    <key>LSMinimumSystemVersion</key><string>26.0</string>
+    <key>LSUIElement</key><true/>
+    <key>CFBundleURLTypes</key><array><dict>
+        <key>CFBundleURLName</key><string>no.paraply.shotglass.capture</string>
+        <key>CFBundleURLSchemes</key><array><string>shotglass</string></array>
+        <key>CFBundleTypeRole</key><string>Editor</string>
+    </dict></array>
+    <key>NSPrincipalClass</key><string>NSApplication</string>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSMicrophoneUsageDescription</key><string>Shotglass records your microphone when you enable voice recording.</string>
+    <key>NSCameraUsageDescription</key><string>Shotglass adds your webcam to recordings when you enable the camera bubble.</string>
+    <key>NSScreenCaptureUsageDescription</key><string>Shotglass captures screenshots and recordings you choose, saving them locally.</string>
+    <key>NSHumanReadableCopyright</key><string>Shotglass · 2026</string>
+</dict></plist>

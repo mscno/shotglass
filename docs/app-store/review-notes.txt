@@ -1,0 +1,15 @@
+Shotglass is an on-demand screenshot and screen-recording utility. No login or account is needed.
+
+Requires an Apple Silicon Mac running macOS 26 or later. Launching the app opens a small capture toolbar; it intentionally has no Dock icon and exits when the capture session is finished. Relaunch from Applications or Spotlight. Escape closes the capture session. The library and Settings remain available from the toolbar.
+
+Grant Screen Recording permission in System Settings when macOS requests it. Camera and microphone are optional and requested only when enabled for recording. Recording shows a visible control bar with a stop button and elapsed time.
+
+On the first saved capture, choose Documents/Screenshots or another folder using the native folder picker. The sandboxed app stores a security-scoped bookmark so this permission is remembered. Clipboard copying and saving a PNG are enabled by default.
+
+Toolbar shortcuts: 1 = full display, 2 = select window, 3 = area, 4 = active window, 5 = last area. D or N draws a new area; Return captures; Escape closes. Settings can enable Snap on draw and the three-second thumbnail preview.
+
+The Mac App Store edition is sandboxed. Scrolling capture is manual: scroll the page yourself, then Add Frame, then Finish. This edition does not request Accessibility permission, simulate input in other apps, or monitor global keyboard shortcuts.
+
+The app has no network client, accounts, advertising, analytics, purchases or third-party SDKs. Screenshots, recordings, text recognition, settings and history remain local. Users may independently share files, paste from the clipboard or choose a cloud-synced save folder.
+
+Submission is currently on hold. Before uploading, verify the build, final screenshots, contact details, support/privacy URLs, age rating, privacy responses and release configuration.

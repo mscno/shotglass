@@ -1,0 +1,33 @@
+{
+  "status": "local-draft",
+  "name": "Shotglass",
+  "subtitle": "Screenshots, made simple",
+  "bundleId": "no.paraply.shotglass",
+  "sku": "shotglass-macos",
+  "platform": "MAC_OS",
+  "primaryLocale": "en-US",
+  "category": "UTILITIES",
+  "price": "FREE",
+  "minimumMacOS": "26.0",
+  "architecture": "arm64",
+  "seller": "Paraply Ventures AS",
+  "copyright": "2026 Paraply Ventures AS",
+  "releaseMode": "MANUAL",
+  "keywords": "screenshot,capture,screen,recording,annotation,clipboard,OCR,scrolling,PNG,video",
+  "marketingUrl": "",
+  "supportUrl": "",
+  "privacyPolicyUrl": "",
+  "reviewContact": { "firstName": "Mads", "lastName": "Schou-Andreasen", "email": "", "phone": "" },
+  "loginRequired": false,
+  "privacy": { "tracking": false, "dataCollected": false },
+  "screenshots": [],
+  "openItems": [
+    "Publish the prepared support and privacy copy on the chosen domain.",
+    "Confirm a working support email and App Review contact email/phone.",
+    "Create or export Paraply App Store app and installer distribution identities.",
+    "Register the bundle ID and create the macOS app record in Paraply's account.",
+    "Capture and review actual Store-edition screenshots with compositor-rendered Liquid Glass.",
+    "Complete the age-rating questionnaire and any applicable account/trader declarations.",
+    "Validate a distribution-signed package when upload is authorized."
+  ]
+}
