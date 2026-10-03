@@ -149,8 +149,13 @@ struct Clip: Codable, Identifiable, Equatable {
         let folder = try destination ?? (p.saveToDisk ? p.captureFolder() : support.appendingPathComponent("Captures",isDirectory: true))
         try FileManager.default.createDirectory(at: folder,withIntermediateDirectories: true)
         let url = folder.appendingPathComponent(CaptureFiles.filename(extension: ext))
-        let rep = NSBitmapImageRep(cgImage: image)
-        guard let data = rep.representation(using: ext == "jpg" ? .jpeg : .png,properties: [.compressionFactor: 0.95]) else { throw ShotError.message("Unable to encode screenshot.") }
+        let data: Data
+        if ext == "jpg" {
+            guard let jpeg = NSBitmapImageRep(cgImage: image).representation(using: .jpeg,properties: [.compressionFactor: 0.95]) else { throw ShotError.message("Unable to encode screenshot.") }
+            data = jpeg
+        } else {
+            data = try ScreenshotPixels.png(image)
+        }
         try data.write(to: url,options: .atomic)
         let clip = Clip(path: url.path,kind: kind,width: image.width,height: image.height)
         add(clip)

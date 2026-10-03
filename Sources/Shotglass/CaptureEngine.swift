@@ -107,26 +107,50 @@ enum CaptureTarget {
         return SCContentFilter(display: display,excludingApplications: excluded,exceptingWindows: exceptions)
     }
     func image(_ target: CaptureTarget) async throws -> CGImage {
-        // Handle regions spanning monitors, including displays with different scale factors.
-        if case .region(let rect) = target, let content {
+        guard let content else { throw ShotError.message("Screen capture is not ready. Try again.") }
+        switch target {
+        case .window(let window):
+            // Let the still-image API size the complete window, including its shadow.
+            // A stream-sized surface can shrink the content to fit the shadow bounds.
+            return try await nativeImage(SCContentFilter(desktopIndependentWindow: window), shadow: Preferences.shared.windowShadow)
+        case .display(let id):
+            guard let display = content.displays.first(where: { $0.displayID == id }) else { throw ShotError.message("This display is no longer connected.") }
+            return try await nativeImage(displayFilter(display, content: content))
+        case .region(let rect):
             let quartz = CaptureGeometry.quartz(rect,primaryHeight: NSScreen.primaryHeight)
-            let displays = content.displays.filter { !$0.frame.intersection(quartz).isNull && $0.frame.intersection(quartz).width > 0 }
-            if displays.count > 1 {
-                let scale = NSScreen.screens.map(\.backingScaleFactor).max() ?? 2
-                guard let context = CGContext(data: nil,width: Int(rect.width*scale),height: Int(rect.height*scale),bitsPerComponent: 8,bytesPerRow: 0,space: CGColorSpaceCreateDeviceRGB(),bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { throw ShotError.message("Cannot create screenshot.") }
-                for display in displays {
-                    let intersection = quartz.intersection(display.frame)
-                    let cocoa = CaptureGeometry.quartz(intersection,primaryHeight: NSScreen.primaryHeight)
-                    let (filter,config) = try configuration(for: .region(cocoa))
-                    let part = try await SCScreenshotManager.captureImage(contentFilter: filter,configuration: config)
-                    context.draw(part,in: CGRect(x: (cocoa.minX-rect.minX)*scale,y: (cocoa.minY-rect.minY)*scale,width: cocoa.width*scale,height: cocoa.height*scale))
-                }
-                guard let result = context.makeImage() else { throw ShotError.message("Cannot combine displays.") }
-                return result
+            let displays = content.displays.filter { area($0.frame.intersection(quartz)) > 0 }
+            guard !displays.isEmpty else { throw ShotError.message("The saved area is off screen. Draw a new area.") }
+            var parts: [(image: CGImage, rect: CGRect, scale: CGFloat)] = []
+            for display in displays {
+                // Capture the native display first; crop by integer pixel edges afterward.
+                // Never ask ScreenCaptureKit to rescale a sourceRect into a stream surface.
+                let full = try await nativeImage(displayFilter(display, content: content))
+                guard let pixels = ScreenshotPixels.cropRect(quartz, display: display.frame, width: full.width, height: full.height),
+                      let cropped = full.cropping(to: pixels) else { throw ShotError.message("Cannot crop screenshot.") }
+                let scale = CGFloat(full.width) / display.frame.width
+                let actualQuartz = CGRect(x: display.frame.minX + pixels.minX / scale,
+                                          y: display.frame.minY + pixels.minY / scale,
+                                          width: pixels.width / scale, height: pixels.height / scale)
+                parts.append((cropped, CaptureGeometry.quartz(actualQuartz, primaryHeight: NSScreen.primaryHeight), scale))
             }
+            if parts.count == 1 { return parts[0].image }
+            // A mixed-density image needs one output grid. Use the highest density
+            // among captured displays so no Retina pixels are discarded.
+            let scale = parts.map(\.scale).max()!
+            let bounds = parts.reduce(rect) { $0.union($1.rect) }
+            guard let context = CGContext(data: nil,width: Int(ceil(bounds.width*scale)),height: Int(ceil(bounds.height*scale)),bitsPerComponent: 8,bytesPerRow: 0,space: parts[0].image.colorSpace ?? CGColorSpaceCreateDeviceRGB(),bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { throw ShotError.message("Cannot create screenshot.") }
+            context.interpolationQuality = .none
+            for part in parts {
+                context.draw(part.image,in: CGRect(x: ((part.rect.minX-bounds.minX)*scale).rounded(),y: ((part.rect.minY-bounds.minY)*scale).rounded(),width: (part.rect.width*scale).rounded(),height: (part.rect.height*scale).rounded()))
+            }
+            guard let result = context.makeImage() else { throw ShotError.message("Cannot combine displays.") }
+            return result
         }
-        let (filter,config) = try configuration(for: target)
-        return try await SCScreenshotManager.captureImage(contentFilter: filter,configuration: config)
+    }
+    private func nativeImage(_ filter: SCContentFilter, shadow: Bool = false) async throws -> CGImage {
+        // Leave width, height, sourceRect and destinationRect unset. macOS returns
+        // native pixels and the display color space instead of scaling to a surface.
+        return try await ScreenshotPixels.capture(filter, cursor: Preferences.shared.captureCursor, shadow: shadow)
     }
     nonisolated static func recognize(_ image: CGImage) async throws -> String {
         try await Task.detached(priority: .userInitiated) {
