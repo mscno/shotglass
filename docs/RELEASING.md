@@ -68,13 +68,13 @@ Signing and notarization avoid the unidentified-developer/cannot-check-for-malic
      --title 'Shotglass 1.6.2' --draft
    ```
 
-   Use the actual app version for future releases. Test the downloaded DMG on another Mac, review the release, then click **Publish release**. This repo is currently private: published releases remain available only to people who can access it. For anonymous downloads, distribute through a public repo or other public hosting; changing the visibility of this source repo is a separate decision. [GitHub's release guide](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) explains draft and repository visibility.
+   Use the actual app version for future releases. Test the downloaded DMG on another Mac, review the release, then click **Publish release**. This repository is public: published stable releases and their update feeds are available without signing in. [GitHub's release guide](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) explains draft and repository visibility.
 
 ## Automate through GitHub Actions
 
 The **Release signed DMG** workflow runs on pushes to `master` and manually from the Actions tab, on an Apple Silicon `macos-26` runner. It runs Swift unit tests and notarization control-flow tests, imports signing credentials into a temporary keychain, runs the same release script, uploads the verified DMG and checksum as an Actions artifact, and removes the temporary credentials. It does not sign pull requests or other branches. There is no path filter: rewriting the single-commit `master` history prevents GitHub from reliably comparing changed files. The DMG layout uses [dmgbuild](https://github.com/dmgbuild/dmgbuild), which writes Finder settings without automating Finder.
 
-Open a successful run and download **Shotglass-<version>-AppleSilicon** from its Artifacts section or its summary link. Extract the artifact ZIP, verify `SHA256SUMS.txt`, open the DMG, and drag the app into Applications. Artifacts are retained for 30 days and require access to this private repository. A failed notarization publishes only available public diagnostic JSON, never a release DMG or signing credentials. [GitHub's artifact guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts) explains downloading them.
+Open a successful run and download **Shotglass-<version>-AppleSilicon** from its Artifacts section or its summary link. Extract the artifact ZIP, verify `SHA256SUMS.txt`, open the DMG, and drag the app into Applications. Artifacts are retained for 30 days and require a GitHub account. A failed notarization publishes only available public diagnostic JSON, never a release DMG or signing credentials. [GitHub's artifact guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts) explains downloading them.
 
 The job allows 210 minutes for the two notarization waits and packaging. Artifact builds can repeat the same version; they do not create a tag or GitHub release. A separate optional job creates a **draft** release only when requested by the manual workflow input.
 
@@ -121,3 +121,11 @@ bash scripts/make-dmg.sh dist/Shotglass.app dist/Shotglass-preview.dmg
 ```
 
 This is a preview DMG containing the locally signed development build. It is not suitable for warning-free distribution. `release.sh` never skips notarization and only copies the final release DMG into `dist/release` after all checks pass.
+
+## Sparkle updates
+
+The direct-download app embeds Sparkle 2.10.0, including its signed installer helpers. `scripts/sign-sparkle.sh` signs each nested component before the framework and app. Keep Library Validation enabled.
+
+Set `SPARKLE_PRIVATE_KEY` in GitHub Actions secrets to the base64-encoded 32-byte Ed25519 seed matching `SUPublicEDKey`. Keep a secure backup outside Git. For local signing set `SPARKLE_KEY_FILE` to a protected file containing that value. Existing Apple signing/notarization secrets are unchanged.
+
+After notarization and stapling, `scripts/generate-appcast.py` signs the final DMG and feed with Sparkle's pinned tools, verifies both signatures, and adds the feed checksum. Draft releases include `appcast.xml`. Publish the matching DMG and feed together as a stable release; the app uses GitHub's latest stable release asset URL. Never edit a signed feed after signing or overwrite a published DMG. Bump both the marketing version and build number for every update.

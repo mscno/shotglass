@@ -18,6 +18,17 @@ struct CaptureRequest {
 
 @MainActor final class AppController: NSObject,ObservableObject,NSApplicationDelegate,NSWindowDelegate {
     static let shared = AppController()
+    #if !APP_STORE
+    lazy var updates: AppUpdates = {
+        let manager = AppUpdates()
+        manager.isCapturing = { [weak self] in self?.captureWorkActive ?? false }
+        manager.sessionFinished = { [weak self] in self?.finishIfIdle() }
+        return manager
+    }()
+    #endif
+    var captureWorkActive: Bool {
+        overlay.onComplete != nil || !overlay.windows.isEmpty || busy || pendingExports > 0 || pendingCapture != nil || launcherPending || recording || recorder != nil || scrolling != nil
+    }
     lazy var store = ClipStore()
     let engine = CaptureEngine()
     lazy var overlay = CaptureOverlay(engine: engine)
@@ -62,14 +73,23 @@ struct CaptureRequest {
         if scrolling != nil { activity.insert(.scrolling) }
         if previewLifetime.isActive { activity.insert(.preview) }
         if mainWindow?.isVisible == true || settingsWindow?.isVisible == true || auxiliaryWindows.contains(where: { $0.isVisible }) { activity.insert(.toolWindow) }
+        #if !APP_STORE
+        if updates.holdsSession { activity.insert(.toolWindow) }
+        #endif
         return activity
     }
     func finishIfIdle() {
         guard launched else { return }
         idleExitTask?.cancel()
+        #if !APP_STORE
+        updates.resumeInstallationIfReady()
+        #endif
         idleExitTask = Task {
             do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
             guard sessionActivity.shouldExit else { return }
+            #if !APP_STORE
+            if updates.checkBackgroundIfDue() { return }
+            #endif
             NSApp.terminate(nil)
         }
     }
@@ -206,6 +226,10 @@ struct CaptureRequest {
         let menu = NSMenu()
         let app = NSMenuItem(); let submenu = NSMenu()
         submenu.addItem(withTitle: "About Shotglass",action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),keyEquivalent: "")
+        #if !APP_STORE
+        let update = submenu.addItem(withTitle: "Check for Updates…",action: #selector(checkForUpdates),keyEquivalent: "")
+        update.target = self
+        #endif
         submenu.addItem(.separator())
         let settings = submenu.addItem(withTitle: "Settings…",action: #selector(openSettings),keyEquivalent: ","); settings.target = self
         submenu.addItem(withTitle: "Hide Shotglass",action: #selector(NSApplication.hide(_:)),keyEquivalent: "h")
@@ -220,6 +244,9 @@ struct CaptureRequest {
         window.submenu = windows; menu.addItem(window); NSApp.windowsMenu = windows
         NSApp.mainMenu = menu
     }
+    #if !APP_STORE
+    @objc func checkForUpdates() { updates.checkNow() }
+    #endif
     @objc func openCaptureBar() { route(.capture) }
     @objc func menuCapture(_ sender: NSMenuItem) { if let raw = sender.representedObject as? String,let mode = CaptureMode(rawValue: raw) { capture(mode) } }
     @objc func openMain() {

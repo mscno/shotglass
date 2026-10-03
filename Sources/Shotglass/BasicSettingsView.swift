@@ -36,6 +36,9 @@ struct BasicSettingsView: View {
                     Text("A thumbnail slides into the bottom right. New captures replace it; Shotglass quits when it disappears.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                #if !APP_STORE
+                Section("Updates") { UpdateSettingsView() }
+                #endif
                 Section {
                     Button("Privacy Policy") { controller.openPrivacyPolicy() }
                     Text("Shotglass opens when you launch it and quits when you finish. It remembers your capture mode and area.")
@@ -56,3 +59,18 @@ struct BasicSettingsView: View {
         }.buttonStyle(.glass)
     }
 }
+
+#if !APP_STORE
+struct UpdateSettingsView: View {
+    @ObservedObject var updates = AppController.shared.updates
+    var body: some View {
+        Toggle("Check for updates automatically", isOn: $updates.automaticChecks)
+        Toggle("Automatically install updates", isOn: $updates.automaticInstall)
+            .disabled(!updates.automaticChecks)
+        Button("Check for Updates…") { updates.checkNow() }.disabled(!updates.canCheck)
+        Text("Updates come from GitHub. Installation waits until capture and export finish.")
+            .font(.caption).foregroundStyle(.secondary)
+            .onAppear { updates.start() }
+    }
+}
+#endif

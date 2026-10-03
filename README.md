@@ -1,12 +1,12 @@
 # Shotglass
 
-A native Apple Silicon macOS capture utility inspired by CleanShot X, built in Swift, SwiftUI, AppKit, ScreenCaptureKit, Vision, and AVFoundation. Uses macOS Liquid Glass through native `glassEffect`, `GlassEffectContainer`, and glass button styles. No third-party dependencies, subscriptions, or account required.
+A native Apple Silicon macOS capture utility inspired by CleanShot X, built in Swift, SwiftUI, AppKit, ScreenCaptureKit, Vision, and AVFoundation. Uses macOS Liquid Glass through native `glassEffect`, `GlassEffectContainer`, and glass button styles. No subscription or account required. Direct downloads use Sparkle for updates.
 
 ![Shotglass screenshot selector](docs/screenshot.png)
 
 ## Run
 
-Source repository: [mscno/shotglass](https://github.com/mscno/shotglass) (private).
+Source repository: [mscno/shotglass](https://github.com/mscno/shotglass) (public).
 
 Open `dist/Shotglass.app`. Launching or reopening the app shows a compact Liquid Glass capture bar at the bottom of the current display. The capture bar and transparent selector open together, without waiting for desktop frames. Escape works throughout startup. The last capture mode and area are remembered across launches. There is no Dock icon, persistent menu-bar item, global hotkey registration, or login launch. Capture or cancel ends the session and exits the process. Settings and Library open only when requested. If you enable the optional thumbnail, Shotglass exits after it disappears; explicitly opened editors, pins, recordings, and library windows keep the session active until finished.
 
@@ -142,3 +142,11 @@ Latest 1.6.2 verification: 35 unit tests, 64 offline checks, 19 native-selector 
 Startup no longer enumerates shareable content, captures desktop backdrops or starts preview streams for screen/area selection. It creates the clear selector and Liquid Glass toolbar immediately. macOS composes underlying content at its own rate. The selector redraws only when selection geometry or the window target changes. Window hit testing caches a WindowServer snapshot for one display frame and uses indexed window lookup. History remains lazy, screenshot export reuses the encoded PNG for clipboard output, and no fixed launcher or preselection wait remains.
 
 See [the performance review](docs/PERFORMANCE.md) for local measurements and limits of the benchmark.
+
+## Updates
+
+Direct-download builds use Sparkle 2.10.0. Automatic update checks are enabled by default and use a signed feed on GitHub Releases, with no system-profile reporting. Use **Check for Updates…** or enable **Automatically install updates** in settings. Automatic installation is opt-in. Update archives and feeds are signed with a separate Ed25519 key, and release apps/DMGs remain Paraply-signed, Apple-notarized and stapled.
+
+The first Sparkle-enabled version must be installed manually. Subsequent stable releases publish `appcast.xml` alongside their DMG; previews and drafts do not enter the latest stable feed. Capture diagnostics and UI tests disable network update checks.
+
+Shotglass checks at the first safe idle point of a capture session and stays alive while the check completes. Failed checks are attempted at most once per launch. Installation waits for capture/export; the Store edition has no Sparkle dependency or update controls.

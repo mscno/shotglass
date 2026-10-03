@@ -53,6 +53,9 @@ struct SettingsView: View {
                 Text("Launch Shotglass from Applications, Spotlight, or Raycast. It remembers the last mode and quits when the session ends.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
+            #if !APP_STORE
+            settingsSection("Updates",subtitle: "Keep Shotglass up to date.") { UpdateSettingsView() }
+            #endif
             settingsSection("Screen access",subtitle: "Allow screenshots through macOS privacy settings.") {
                 Button("Privacy Policy") { controller.openPrivacyPolicy() }
                 HStack { Label(controller.permitted ? "Screen Recording allowed" : "Screen Recording access needed",systemImage: controller.permitted ? "checkmark.circle" : "exclamationmark.circle"); Spacer(); Button("System Settings") { controller.openPrivacy() } }

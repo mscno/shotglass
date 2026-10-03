@@ -16,11 +16,19 @@ fi
 swift build "${BUILD_ARGS[@]}"
 BIN_PATH="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)"
 APP="${APP_OUTPUT_DIR:-$PWD/dist}/Shotglass.app"
+rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_PATH/Shotglass" "$APP/Contents/MacOS/Shotglass"
+if [[ "$EDITION" == direct ]]; then
+    SPARKLE_ROOT="$(bash scripts/fetch-sparkle.sh)"
+    mkdir -p "$APP/Contents/Frameworks"
+    ditto "$SPARKLE_ROOT/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
+    bash scripts/sign-sparkle.sh "$APP"
+fi
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/PrivacyInfo.xcprivacy "$APP/Contents/Resources/PrivacyInfo.xcprivacy"
 if [[ "$EDITION" == app-store ]]; then
+    for KEY in SUFeedURL SUPublicEDKey SUEnableAutomaticChecks SUAutomaticallyUpdate SUSendProfileInfo SUVerifyUpdateBeforeExtraction SURequireSignedFeed; do /usr/libexec/PlistBuddy -c "Delete :$KEY" "$APP/Contents/Info.plist"; done
     /usr/libexec/PlistBuddy -c 'Add :CFBundleDevelopmentRegion string en' "$APP/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c 'Add :LSApplicationCategoryType string public.app-category.utilities' "$APP/Contents/Info.plist"
     /usr/libexec/PlistBuddy -c 'Add :CFBundleSupportedPlatforms array' "$APP/Contents/Info.plist"
@@ -38,7 +46,7 @@ swift scripts/make-icon.swift "$APP/Contents/Resources"
 if [[ -n "${SIGNING_IDENTITY:-}" ]]; then
     SIGN_ARGS=(--force --sign "$SIGNING_IDENTITY" --identifier no.paraply.shotglass --options runtime --timestamp --entitlements "$ENTITLEMENTS")
     if [[ -n "${SIGNING_KEYCHAIN:-}" ]]; then SIGN_ARGS+=(--keychain "$SIGNING_KEYCHAIN"); fi
-    # This bundle contains one executable and no embedded frameworks/helpers.
+    # Sparkle's nested helpers were signed explicitly above.
     # Sign nested code explicitly here if the bundle gains any in future.
     codesign "${SIGN_ARGS[@]}" "$APP"
 else
